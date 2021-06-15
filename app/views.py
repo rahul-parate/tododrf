@@ -1,6 +1,6 @@
 
 from rest_framework.response import Response
-from .serializers import TaskSerializer, CreateTaskSerializer
+from .serializers import TaskSerializer
 from .models import Task
 from rest_framework.views import APIView
 from rest_framework import status
@@ -24,13 +24,13 @@ class CreateView(APIView):
 		print(request.data)
 		data = request.data
 		res = None
-		serializer = CreateTaskSerializer(data=data)
+		serializer = TaskSerializer(data=data)
 		if serializer.is_valid():
 			print(serializer.data)
 			res = serializer.create()
 			print('res = ', res)
-		return Response(data=res, status=status.HTTP_200_OK)
-
+			return Response(data=res, status=status.HTTP_200_OK)
+		return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class EditView(APIView):
@@ -40,7 +40,7 @@ class EditView(APIView):
 		res = None
 		
 		if data.get('action' == 'update'):
-			serializer = CreateTaskSerializer(data=data)
+			serializer = TaskSerializer(data=data)
 			if serializer.is_valid():
 				print(serializer.data)
 				res = serializer.update()
@@ -65,15 +65,11 @@ class DeleteView(APIView):
 
 
 class DetailsView(APIView):
-	def get(self, request, *args, **kwargs):
-		api_urls = {
-			'List' : '/task-list/',
-			'Detail View' : '/task-detail/<str:pk>/',
-			'Create' : '/task-create/',
-			'Update' : '/task-update/<str:pk>/',
-			'Delete' : '/task-delete/<str:pk>/',
-		}
-		return Response(data=api_urls,status=status.HTTP_200_OK)
+	def get(self, request, taskid,  *args, **kwargs):
+		task = Task.objects.filter(id=taskid)
+		serializer = TaskSerializer(task, many=True)
+
+		return Response(data=serializer.data,status=status.HTTP_200_OK)
 
 
 class TaskList(APIView):
